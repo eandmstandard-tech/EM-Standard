@@ -7,7 +7,7 @@
  * 2) ลบโค้ดเดิมใน Code.gs และวางไฟล์นี้ทั้งหมด
  * 3) ตรวจใน Services ว่ามี Drive API เวอร์ชัน v2 (Identifier: Drive) เพียงรายการเดียว
  * 4) กด Save แล้ว Run ฟังก์ชัน setupRefresh หนึ่งครั้ง
- *    ฟังก์ชันนี้สร้างดัชนีเริ่มต้นและทริกเกอร์ตรวจไฟล์ทุก 15 นาที
+    ฟังก์ชันนี้สร้างดัชนีเริ่มต้นและทริกเกอร์ตรวจไฟล์ทุก 15 นาที
  * 5) หากต้องการเลขหน้าอัตโนมัติ ให้ตั้ง Script Properties:
  *    DOC_AI_PROJECT_ID, DOC_AI_LOCATION, DOC_AI_PROCESSOR_ID,
  *    PAGE_GCS_BUCKET, PAGE_SEARCH_DOMAIN
