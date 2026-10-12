@@ -24,7 +24,7 @@
  * SyntaxError: Unexpected token 'const' ในบางโปรเจกต์
  */
 
-var ROOT_FOLDER_ID = 'YOUR_STANDARD_FOLDER_ID'; // ตั้งค่ารหัสโฟลเดอร์ที่ได้รับอนุญาตก่อน Run
+var ROOT_FOLDER_ID = '1d3PoPSYSgMD3Lm2BACKQ5JFg9evkl0kj'; // ตั้งค่ารหัสโฟลเดอร์ที่ได้รับอนุญาตก่อน Run
 var CACHE_SECONDS = 300;
 var INDEX_META_KEY = 'HUB_INDEX_META_V2ASYNC';
 var INDEX_JOB_KEY = 'HUB_INDEX_JOB_V2ASYNC';
