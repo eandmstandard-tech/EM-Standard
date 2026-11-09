@@ -1,0 +1,10 @@
+.env
+.env.*
+.vercel/
+.clasp.json
+.openai/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+/dist/vendor/

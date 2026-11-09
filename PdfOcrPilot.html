@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base target="_blank">
+<style>
+:root{color-scheme:dark;font:16px/1.6 system-ui,sans-serif;color:#e5eef7;background:#101b29}
+body{max-width:780px;margin:48px auto;padding:0 20px}h1,h2{line-height:1.3}h1{font-size:1.75rem}h2{font-size:1.14rem;margin:0 0 6px;overflow-wrap:anywhere}
+small,header p,#status{color:#aebed1}form,article{background:#16263a;border:1px solid #304861;border-radius:10px;padding:18px;margin:16px 0}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:end}.field{display:grid;gap:5px;flex:1;min-width:185px}.mode{flex:0 1 auto}input,select,button{font:inherit;padding:9px;border:1px solid #466783;border-radius:6px}input,select{background:#0d1926;color:inherit}button{background:#a9e0ef;color:#102337;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+a{color:#a6dcff}mark{background:#ffdc85;color:#192436}ul{padding-left:1.4rem}li{margin:12px 0}li p{margin:3px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<header><small>ENGINEERING STANDARD · รุ่นทดสอบสำหรับผู้ดูแล</small><h1>ค้นข้อความใน PDF สแกน</h1><p>ค้นจากดัชนี OCR ของ PDF ที่เลือกไว้ใน Google Drive แล้วดูข้อความและเลขหน้าที่พบ</p></header>
+<form id="form">
+  <div class="controls"><label class="field">คำค้น<input id="query" type="search" placeholder="เช่น corrosion allowance หรือ การกัดกร่อน" maxlength="120" required></label>
+  <label class="field mode">รูปแบบ<select id="mode"><option value="all">ทุกคำในไฟล์เดียวกัน</option><option value="phrase">ตรงกันทั้งวลี</option><option value="any">พบคำใดคำหนึ่ง</option></select></label>
+  <button id="submit" type="submit">ค้นหา</button></div>
+</form>
+<p id="status" role="status">ใส่คำค้นเพื่อค้นจากไฟล์ที่สร้างดัชนีแล้ว</p>
+<section id="results" aria-label="ผลค้น OCR"></section>
+<script>
+const form=document.getElementById('form'),query=document.getElementById('query'),mode=document.getElementById('mode');
+const submit=document.getElementById('submit'),status=document.getElementById('status'),results=document.getElementById('results');
+function add(parent,tag,text){const node=document.createElement(tag);node.textContent=text;parent.appendChild(node);return node;}
+function appendExcerpt(parent,value,words){
+ const text=String(value||'').normalize('NFC');const spans=[];const lower=text.toLowerCase();
+ words.forEach(word=>{let at=lower.indexOf(word);while(at>=0){spans.push([at,at+word.length]);at=lower.indexOf(word,at+word.length);}});
+ spans.sort((a,b)=>a[0]-b[0]||b[1]-a[1]);let end=0;
+ spans.forEach(([from,to])=>{if(from<end)return;parent.append(document.createTextNode(text.slice(end,from)));add(parent,'mark',text.slice(from,to));end=to;});
+ parent.append(document.createTextNode(text.slice(end)));
+}
+form.addEventListener('submit',event=>{
+ event.preventDefault();const input=query.value.replace(/[\u200B\uFEFF]/g,'').normalize('NFC').trim().replace(/\s+/g,' ');if(!input)return;
+ const style=mode.value,words=(style==='phrase'?[input]:input.split(' ')).map(word=>word.toLowerCase());
+ submit.disabled=true;results.replaceChildren();status.textContent='กำลังค้นดัชนี OCR…';
+ google.script.run.withSuccessHandler(data=>{
+   submit.disabled=false;status.textContent=`พบ ${data.files.length} ไฟล์${data.partial?' · มีไฟล์ที่ยังสร้างหรืออ่านดัชนีไม่สำเร็จ':''}`;
+   data.files.forEach(file=>{
+     const card=add(results,'article','');add(card,'h2',file.name);
+     if(/^https:\/\/drive\.google\.com\/file\/d\/[A-Za-z0-9_-]+\/view$/.test(file.url)){const link=add(card,'a','เปิดอ่านใน Google Drive');link.href=file.url;link.rel='noopener noreferrer';}
+     const list=add(card,'ul','');file.pages.forEach(page=>{const row=add(list,'li','');add(row,'strong','หน้า '+page.number);appendExcerpt(add(row,'p',''),page.excerpt,words);});
+   });
+ }).withFailureHandler(error=>{submit.disabled=false;status.textContent=error.message||'ค้นไม่สำเร็จ กรุณาตรวจสิทธิ์และการตั้งค่า';}).searchDrivePdfOcrPilot(input,style);
+});
+</script>
+</body>
+</html>

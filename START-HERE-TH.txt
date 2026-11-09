@@ -1,0 +1,14 @@
+Engineering Standards Hub: GitHub → Vercel
+
+1. แตก ZIP แล้วเปิด GitHub repository แบบ Private
+2. กด Add file → Upload files แล้วลากไฟล์และโฟลเดอร์ที่แตกออกมาทั้งหมดลงหน้า GitHub
+   ให้อัปโหลดไฟล์ข้างในที่ระดับบนสุดของ repository ไม่ต้องอัปโหลดไฟล์ ZIP
+3. กด Commit changes หากเป็น repository เดิม ใช้ branch ใหม่สำหรับทดสอบ
+4. Vercel → Add New → Project → Import repository จาก GitHub → Deploy
+   ใช้ราก repository เป็น Root Directory และให้ vercel.json กำหนด Build กับ Output
+5. ทดสอบด้วยข้อมูลตัวอย่างก่อน โดยค้นคำว่า tank inspection
+
+หากจะเชื่อม Google Drive จริง อ่านขั้นตอนตั้งค่า Apps Script และการจำกัดสิทธิ์
+Production ใน README.md ก่อนตั้ง APPS_SCRIPT_URL และ APPS_SCRIPT_READER_URL
+
+ไม่ต้องติดตั้ง Node.js บนเครื่องเพื่ออัปโหลดหรือ Deploy

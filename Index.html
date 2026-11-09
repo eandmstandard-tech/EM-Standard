@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base target="_blank">
+<style>
+:root{color-scheme:dark;background:#202124;color:#e8eaed;font:16px/1.6 system-ui,sans-serif}
+body{max-width:780px;margin:46px auto;padding:0 20px}
+h1,h2{line-height:1.35}p{margin:8px 0}small,#status{color:#bdc1c6}
+form{background:#292a2d;border:1px solid #41444b;border-radius:12px;padding:16px;margin:18px 0}
+label{display:block;margin-bottom:10px}input,select,button{display:block;font:inherit;padding:8px 12px;border:1px solid #5f6368;border-radius:8px}
+input{width:100%;box-sizing:border-box;color:#e8eaed;background:#202124}
+select,button{max-width:100%}button{margin-top:10px;background:#a8c7fa;color:#152b4a;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.65}
+article{border-bottom:1px solid #3c4043;padding:12px 0}
+a{color:#a8c7fa} mark{background:#5b3a2e;color:#ffd0be}
+</style></head><body>
+<small>ENGINEERING STANDARD · สำหรับบัญชีที่ได้รับอนุญาต</small>
+<h1>ค้นข้อความและเลขหน้าจาก Drive</h1>
+<p>คัดลอกลิงก์ PDF หรือ Word จากผลค้นหาใน Engineering Standard Hub แล้วค้นคำที่ต้องการ</p>
+<form id="form">
+<label>ลิงก์ไฟล์ Drive หรือ File ID<input id="file" required maxlength="300" autocomplete="off"></label>
+<label>คำค้น<input id="query" type="search" required maxlength="120" autocomplete="off"></label>
+<label>รูปแบบการค้น<select id="mode"><option value="all">พบทุกคำในไฟล์</option><option value="phrase">ตรงทั้งวลี</option><option value="any">พบอย่างน้อยหนึ่งคำ</option></select></label>
+<button id="run" type="submit">ค้นข้อความและเลขหน้า</button>
+</form>
+<p id="status" role="status"></p><section id="results" aria-label="ผลค้นหา"></section>
+<script>
+const get=id=>document.getElementById(id),form=get('form'),run=get('run'),status=get('status'),results=get('results');
+const messages={denied:'บัญชีนี้ไม่มีสิทธิ์เปิดไฟล์นี้ หรือไฟล์ไม่ได้อยู่ในคลังมาตรฐานที่กำหนด',index_not_ready:'ยังไม่มีดัชนีของไฟล์ฉบับปัจจุบัน',index_not_configured:'ผู้ดูแลยังไม่ได้ตั้งค่าดัชนีเลขหน้า',configuration:'ผู้ดูแลยังตั้งค่าการเชื่อมต่อไม่ครบ',invalid_query:'ตรวจลิงก์ไฟล์และคำค้น (สูงสุด 8 คำ หรือค้นทั้งวลี)'};
+function add(parent,tag,text){const el=document.createElement(tag);el.textContent=text;parent.append(el);return el}
+function marked(node,text,terms){
+ const safe=terms.filter(Boolean).sort((a,b)=>b.length-a.length).map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+ if(!safe.length){node.textContent=text;return}
+ const pattern=new RegExp(safe.join('|'),'giu');let end=0;
+ for(const m of text.matchAll(pattern)){node.append(document.createTextNode(text.slice(end,m.index)));add(node,'mark',m[0]);end=m.index+m[0].length}
+ node.append(document.createTextNode(text.slice(end)));
+}
+form.addEventListener('submit',event=>{
+ event.preventDefault();const q=get('query').value.trim().replace(/\s+/g,' '),mode=get('mode').value;
+ results.replaceChildren();run.disabled=true;status.textContent='กำลังตรวจสิทธิ์ไฟล์และค้นดัชนี…';
+ google.script.run.withSuccessHandler(data=>{
+  run.disabled=false;
+  if(!data?.ok){status.textContent=messages[data?.status]||'อ่านดัชนีไม่ได้ กรุณาลองใหม่หรือติดต่อผู้ดูแล';return}
+  status.textContent=data.pages.length?'พบข้อความ '+data.pages.length+' หน้า':'ไม่พบคำค้นในดัชนีของไฟล์นี้';
+  add(results,'h2',data.fileName);
+  const valid=/^[A-Za-z0-9_-]{8,128}$/.test(data.fileId);
+  const url=valid?'https://drive.google.com/file/d/'+data.fileId+'/view':'';
+  if(url){const link=add(results,'a','เปิดไฟล์ต้นฉบับ ↗');link.href=url;link.rel='noopener noreferrer'}
+  data.pages.forEach(page=>{
+   const row=add(results,'article',''),n=Number(page.number);
+   const label='หน้า '+n+(data.source==='ocr'?' · OCR':'');
+   if(url&&data.mimeType==='application/pdf'&&Number.isSafeInteger(n)&&n>0){
+    const link=add(row,'a',label);link.href=url+'#page='+n;link.rel='noopener noreferrer'
+   }else add(row,'strong',label);
+   marked(add(row,'p',''),String(page.excerpt||''),mode==='phrase'?[q]:q.split(' '));
+  });
+ }).withFailureHandler(()=>{run.disabled=false;status.textContent='เรียกการค้นหาไม่ได้ กรุณาลองใหม่'}).searchPrivateDrivePages(get('file').value,q,mode);
+});
+</script></body></html>

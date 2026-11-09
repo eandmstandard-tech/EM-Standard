@@ -1,46 +1,39 @@
 # Engineering Standards Hub
 
-เว็บค้นหามาตรฐานวิศวกรรม แยกตาม Electrical, Mechanical, Civil และ Instrument ใช้หน้าเว็บ HTML/CSS/JavaScript และ Google Apps Script เป็น backend
+ซอร์สสำหรับ GitHub และ Vercel จากเว็บ Engineering Standards Hub เวอร์ชัน 28
+(commit `15a5f599d17ec82989af6acc735fb101d1ddfc00`) พร้อม Google Apps Script OCR รุ่นทดลอง
 
-## โครงสร้าง
+หน้าเว็บยังค้นจากรหัส ชื่อ คำสำคัญ และสาขา รวมถึงอ่าน PDF/Word ที่ผู้ใช้เลือกจากเครื่อง และทำ OCR PDF สแกนในเบราว์เซอร์ด้วยไฟล์ที่อยู่ในชุดนี้ เมื่อยังไม่ตั้งค่า Apps Script เว็บจะแสดงข้อมูลตัวอย่าง 4 รายการ ไม่มีลิงก์หรือดัชนี Drive ของหน่วยงานฝังในซอร์ส
 
-- `dist/` — หน้าเว็บพร้อมเผยแพร่ รวมตัวอ่าน PDF/Word ในเบราว์เซอร์และไฟล์ vendor ที่จำเป็น
-- `apps-script/` — Code.gs, manifest และคู่มือตั้งค่า backend
-- `tests/` — การทดสอบ Refresh และการค้นเนื้อหา
-- `vercel.json` — ให้ Vercel เผยแพร่เฉพาะ `dist/` โดยไม่ต้อง build
-- `index.html` ที่ราก repository — หน้าทดสอบ GitHub–Vercel เดิม เก็บไว้จาก main
+| โฟลเดอร์ | ใช้ทำอะไร |
+|---|---|
+| `dist/` | หน้าเว็บ HTML/CSS/JS · Vercel เตรียมไลบรารี PDF/OCR ตอน Build |
+| `assets/` | ชุดไฟล์ PDF.js และ Tesseract พร้อมสัญญาอนุญาตและชุดภาษาไทย/อังกฤษ |
+| `apps-script-ocr/` | ชุด Apps Script OCR ใหม่: Owner สำหรับคิวงาน และ Reader ส่วนตัวสำหรับค้นข้อความและเลขหน้า |
+| `apps-script/` | สำเนา Apps Script รุ่นเดิมสำหรับอ้างอิงและรันทดสอบ Refresh |
+| `tests/` | ทดสอบ Search, OCR, Refresh และการอ่านผล |
 
-## ใช้งานบน Vercel
+## นำขึ้น GitHub
 
-ใช้ repository นี้ โดยกำหนด Root Directory เป็นราก repository และ Framework Preset เป็น Other การตั้งค่าใน `vercel.json` ระบุ Output Directory เป็น `dist` แล้ว
+1. แตก ZIP แล้วเปิด GitHub repository แบบ **Private** จากนั้นกด **Add file → Upload files**
+2. ลากไฟล์และโฟลเดอร์ทั้งหมด **ที่อยู่ข้างในโฟลเดอร์ที่แตก ZIP** ลงหน้า GitHub ในรอบเดียว คงโครงสร้างโฟลเดอร์ไว้ และไม่อัปโหลดตัว ZIP
+3. ตรวจว่า `README.md`, `vercel.json`, `assets/`, `scripts/` และ `dist/` อยู่ที่รากของ repository แล้วกด **Commit changes** หากใช้ repo เดิม แนะนำให้ทำบน branch ใหม่เพื่อทดสอบก่อนรวมเข้ากับ branch หลัก
 
-เมื่อรวม pull request เข้า production branch ระบบ Git integration ของ Vercel อาจเผยแพร่ production อัตโนมัติตามการตั้งค่าของ project ไม่จำเป็นต้องติดตั้ง Node.js บนเครื่องผู้ใช้เพื่อเปิดแอป
 
-## Google Apps Script
+## เชื่อม Vercel และ Apps Script
 
-หน้าเว็บรุ่นนี้เลิกใช้ OAuth Client ID และ Google Identity Services ในเบราว์เซอร์แล้ว การค้นเนื้อหาและ Refresh เรียก Apps Script Web App ที่กำหนดใน `dist/config.js` ตัว backend ยังต้องได้รับสิทธิ์อ่าน Drive
+1. สำหรับใช้งานภายใน ให้เปิดการป้องกันการเข้าถึงที่ครอบคลุม URL **Production** ของโครงการก่อนเชื่อมข้อมูลบริษัท สิทธิ์ของ GitHub repository กับสิทธิ์เปิดเว็บเป็นคนละส่วน
+2. บน Vercel กด **Add New → Project → Import** แล้วเลือก repository จาก GitHub ให้ **Root Directory** อยู่ที่ราก repo และ **Framework Preset** เป็น **Other** ถ้าระบบให้เลือก ตรวจว่า Build Command ใช้ `node scripts/build-vercel.cjs` และ Output Directory เป็น `dist` ตาม `vercel.json` จากนั้นกด **Deploy** ครั้งแรกโดยยังไม่ตั้ง URL ของ Apps Script แล้วลองค้น `tank inspection` ในข้อมูลตัวอย่าง Node.js ทำงานบน Vercel จึงไม่ต้องติดตั้งบนเครื่องผู้ใช้ หากบัญชีไม่มีสิทธิ์ตั้งค่าป้องกัน Production ให้ใช้ข้อมูลตัวอย่างเท่านั้น
+3. ไปที่ **Vercel → Project → Settings → Environment Variables** แล้วเพิ่ม:
+   - `APPS_SCRIPT_URL`: URL ของ **Owner** ลงท้าย `/exec` สำหรับดัชนีและปุ่ม Refresh
+   - `APPS_SCRIPT_READER_URL`: URL ของ **Reader** ลงท้าย `/exec` (ถ้ามี) เพื่อแสดงลิงก์ **ค้นดัชนี OCR ส่วนตัวของทีม** ในส่วน OCR
+4. Deploy ใหม่ แล้วตรวจว่า Owner ตอบที่ `?action=health` และ Reader เปิดด้วยบัญชีที่ได้รับสิทธิ์ หากหน้าเว็บโหลด Apps Script ไม่ได้ ให้ตรวจการลงชื่อเข้าใช้และการเข้าถึง Owner ตามนโยบายองค์กร หากเบราว์เซอร์บล็อกการเชื่อมต่อข้ามเว็บไซต์ ให้ใช้หน้า Reader ส่วนตัวโดยตรง หลีกเลี่ยงการเปิด Owner เป็นสาธารณะเพื่อแก้ปัญหา
+5. หากยังไม่ได้ติดตั้ง Apps Script OCR ให้ใช้ [คู่มือภาษาไทย](apps-script-ocr/README-TH.md) และ [วิธีตั้ง Reader](apps-script-ocr/READER-SETUP-TH.md) ให้ Owner/Reader อยู่คนละโปรเจกต์ และเก็บ `ROOT_FOLDER_ID` กับรหัสลับของ Reader ใน Script properties ตามคู่มือ
 
-1. โค้ดสำหรับ repository สาธารณะเว้นค่าเชื่อมต่อไว้: ตั้ง `appsScriptUrl` ใน `dist/config.js` และ `ROOT_FOLDER_ID` ใน `apps-script/Code.gs` ให้เป็นค่าที่ได้รับอนุญาตก่อนใช้งานจริง
-2. เปิดโปรเจกต์ Apps Script ที่เป็นเจ้าของ URL ดังกล่าว แล้วตรวจ Code.gs และ Advanced Drive API v2
-3. ตั้งค่าสิทธิ์เข้าถึงให้ตรงกับกลุ่มผู้ใช้ของหน่วยงาน และ Deploy เวอร์ชันที่รองรับ action search/pages/refresh
-4. หากต้องการเลขหน้าอัตโนมัติ ต้องสร้างดัชนีเอกสารและตั้งค่าสิทธิ์ตาม `apps-script/README.md` ก่อน การย้ายโค้ดขึ้น GitHub ไม่ได้ทำขั้นตอนนี้ให้
+URL ทั้งสองในค่าตั้งค่าเป็นลิงก์ที่เบราว์เซอร์มองเห็นได้ ใช้เฉพาะ URL ของ deployment ห้ามใส่ token, API key หรือรหัสลับในไฟล์เว็บและตัวแปรสองช่องนี้
 
-เลือก PDF ที่มีข้อความหรือ Word .docx จากเครื่องเพื่อค้นในเบราว์เซอร์ได้ PDF สแกนต้องผ่าน OCR ก่อน ส่วน Word อาจไม่มีข้อมูลตำแหน่งหน้า ควรบันทึกเป็น PDF เมื่อจำเป็นต้องอ้างอิงเลขหน้าที่แน่นอน
+OCR จาก Drive ทำจากคิวใน Apps Script ผลข้อความและเลขหน้าดูในหน้า Reader ส่วนตัวหรือหน้า Pilot ของเจ้าของ ไม่ส่งผ่าน API รายการของหน้าเว็บหลัก ปุ่ม Refresh ไม่เริ่ม OCR ส่วน OCR จากไฟล์ในเครื่องยังใช้งานแยกกันในเบราว์เซอร์ได้
 
-## ตรวจสอบโค้ด
+## ทดสอบโค้ด
 
-สำหรับเครื่องพัฒนาที่มี Node.js:
-
-```sh
-node --test tests/refresh.test.cjs tests/content-search.test.cjs
-```
-
-ผลตรวจตอนนำเข้ารุ่นนี้: 38 tests ผ่าน เป็นการทดสอบด้วย mock ไม่ใช่การยืนยันว่า Apps Script ที่ Deploy อยู่หรือดัชนีเลขหน้าพร้อมใช้งานจริง
-
-## ที่มารุ่นนี้
-
-Engineering Standards Hub รุ่น 24 จาก source commit `5e8adc94988a39566bd2c58e6cfe185357ac69df` วันที่นำเข้า 9 ตุลาคม 2569
-
-โค้ดรุ่นนี้แทนรหัสโฟลเดอร์ Drive, URL backend และโดเมนบริษัทด้วยค่าตัวอย่างแล้ว ไม่รวมรายการมาตรฐานหรือข้อมูลจัดหมวดจากคลังภายใน หน้าเว็บเริ่มด้วยรายการว่างจนกว่าจะตั้งค่า backend
-
-ไม่ได้รวมไฟล์มาตรฐาน PDF/Word ของบริษัท ข้อมูลที่สร้างระหว่างใช้งาน หรือ credential/token สำหรับ Google, GitHub หรือ Vercel ตรวจเงื่อนไขการใช้ไฟล์ vendor และ LICENSE ที่แนบในแต่ละโฟลเดอร์
+สำหรับผู้ดูแลที่มี Node.js อยู่แล้ว รัน `node scripts/build-vercel.cjs` เพื่อเตรียมไลบรารีใน `dist/vendor/` ก่อนเปิดเว็บผ่าน HTTP server แล้วรัน `node --test tests/*.test.cjs apps-script-ocr/tests/*.test.cjs apps-script-ocr/private-access.test.cjs` จากราก repo การทดสอบ API และ OCR ฝั่ง Apps Script เป็นการจำลอง ต้องทดสอบกับบัญชีบริษัทและไฟล์สแกนจริงก่อนใช้คลังจริง
